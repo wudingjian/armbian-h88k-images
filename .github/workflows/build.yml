@@ -42,6 +42,10 @@ jobs:
       - name: Apply board Makefile patch
         run: |
           git apply board-makfile-add-hinlink-h88k.patch
+      - name: Copy DTS file
+        run: |
+          mkdir -p arch/arm64/boot/dts/rockchip/
+          cp rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/
       - name: Upload Armbian image
         uses: amazingfate/armbian-compile-action@main
         if: matrix.DISTRO == 'armbian'
