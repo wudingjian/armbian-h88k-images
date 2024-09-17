@@ -72,14 +72,14 @@ runs:
         find . -name 'rk3588-hinlink-h88k.dts' -exec cp /tmp/rk3588-hinlink-h88k.dts {} \;
       
         mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/rockchip-multimedia.packages -O config/desktop/jammy/appgroups/rockchip-multimedia/packages
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.packages -O config/desktop/jammy/appgroups/rockchip-multimedia/packages
         
         mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
-        wget https://github.com/wudingjian/armbian-h88k-images/raw/main/panfork-mesa.packages -O config/desktop/jammy/appgroups/panfork-mesa/packages
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.packages -O config/desktop/jammy/appgroups/panfork-mesa/packages
         
         sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
         git status
