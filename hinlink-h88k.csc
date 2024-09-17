@@ -1,5 +1,5 @@
 # Rockchip RK3588 SoC octa core 4-16GB SoC
-BOARD_NAME="Hinlink H88K"
+BOARD_NAME="hinlink-h88k"
 BOARDFAMILY="rockchip-rk3588"
 BOOTCONFIG="rk3588_defconfig"
 KERNEL_TARGET="legacy"
