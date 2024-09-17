@@ -44,6 +44,7 @@ jobs:
       - name: Apply board patch
         run: |
           patch -p1 < board-makfile-add-hinlink-h88k.patch
+        working-directory: .
 
       - name: Copy board configuration
         run: |
