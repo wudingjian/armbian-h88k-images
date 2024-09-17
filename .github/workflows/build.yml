@@ -27,6 +27,7 @@ jobs:
           draft: false
     outputs:
       release_id: ${{ steps.release.outputs.id }}
+
   build:
     runs-on: ubuntu-latest
     needs: prepare_release
@@ -39,6 +40,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Apply board patch
+        run: |
+          patch -p1 < board-makfile-add-hinlink-h88k.patch
+
+      - name: Copy board configuration
+        run: |
+          mkdir -p config/boards
+          cp hinlink-h88k.csc config/boards/
+
+      - name: Copy device tree
+        run: |
+          mkdir -p build/arch/arm64/boot/dts/rockchip
+          cp rk3588-hinlink-h88k.dts build/arch/arm64/boot/dts/rockchip/
+
       - name: Upload Armbian image
         uses: amazingfate/armbian-compile-action@main
         if: matrix.DISTRO == 'armbian'
