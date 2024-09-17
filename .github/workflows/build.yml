@@ -40,7 +40,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Upload Armbian image
-        uses: wudingjian/armbian-compile-action@main
+        uses: wudingjian/armbian-h88k-images@main
         if: matrix.DISTRO == 'armbian'
         with:
           branch: ${{ matrix.BRANCH }}
