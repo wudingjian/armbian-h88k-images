@@ -1,0 +1,134 @@
+name: 'Armbian/build'
+description: 'Armbian Linux build framework'
+inputs:
+  board:
+    required: true
+  flavor:
+    required: true
+  release-id:
+    required: false
+  github-token:
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Get more space
+      uses: easimon/maximize-build-space@master
+      with:
+        root-reserve-mb: 25600
+        temp-reserve-mb: 4096
+        swap-size-mb: 1024
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        repository: armbian/build
+        ref: main
+        path: build
+    - name: Set env
+      shell: bash
+      run: |
+        if [ "${{ inputs.flavor }}" == "debian" ]; then
+          echo "release=sid" >> $GITHUB_ENV
+          echo "build-minimal=no" >> $GITHUB_ENV
+          echo "build-desktop=yes" >> $GITHUB_ENV
+          echo "desktop-environment=gnome" >> $GITHUB_ENV
+          echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
+          echo "expert=no" >> $GITHUB_ENV
+        elif [ "${{ inputs.flavor }}" == "ubuntu" ]; then
+          echo "release=noble" >> $GITHUB_ENV
+          echo "build-minimal=no" >> $GITHUB_ENV
+          echo "build-desktop=yes" >> $GITHUB_ENV
+          echo "desktop-environment=gnome" >> $GITHUB_ENV
+          echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
+          echo "expert=yes" >> $GITHUB_ENV
+          echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
+        elif [ "${{ inputs.flavor }}" == "cli" ]; then
+          echo "release=noble" >> $GITHUB_ENV
+          echo "build-minimal=no" >> $GITHUB_ENV
+          echo "build-desktop=no" >> $GITHUB_ENV
+          echo "desktop-environment=gnome" >> $GITHUB_ENV
+          echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
+          echo "expert=yes" >> $GITHUB_ENV
+          echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
+        fi
+    - name: Build
+      shell: bash
+      run: |
+        cd ./build
+        touch .ignore_changes
+        mkdir -p patch/kernel/rk35xx-legacy
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/board-makfile-add-hinlink-h88k.patch -O patch/kernel/rk35xx-legacy/board-makefile-add-hinlink-h88k.patch
+        mkdir -p arch/arm64/boot/dts/rockchip/
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
+        git diff --no-index --output=./patch/kernel/rk35xx-legacy/board-dts-add-hinlink-h88k.patch /dev/null arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts || ls -l ./patch/kernel/rk35xx-legacy/board-dts-add-hinlink-h88k.patch
+        # 下载新的 DTS 文件
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O /tmp/rk3588-hinlink-h88k.dts
+        # 查找并替换所有的 rk3588-hinlink-h88k.dts 文件
+        find . -name 'rk3588-hinlink-h88k.dts' -exec cp /tmp/rk3588-hinlink-h88k.dts {} \;
+      
+        mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/rockchip-multimedia.packages -O config/desktop/jammy/appgroups/rockchip-multimedia/packages
+        
+        mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
+        wget https://github.com/leux0/armbian-h88k-images/raw/main/panfork-mesa.packages -O config/desktop/jammy/appgroups/panfork-mesa/packages
+        
+        sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
+        git status
+        docker pull ghcr.io/armbian/docker-armbian-build:armbian-ubuntu-jammy-latest
+        if [ "${{ inputs.flavor }}" == "cli" ]; then
+            ./compile.sh \
+            BOARD=${{ inputs.board }} \
+            BRANCH=${{ inputs.branch }} \
+            RELEASE=${{ env.release }} \
+            BUILD_MINIMAL=${{ env.build-minimal }} \
+            BUILD_DESKTOP=${{ env.build-desktop }} \
+            KERNEL_CONFIGURE=no \
+            EXPERT=${{ env.expert }} \
+            BOARD_FIRMWARE_INSTALL="-full" \
+            SHARE_LOG=yes \
+            DEBUG=yes \
+            COMPRESS_OUTPUTIMAGE=sha,gpg,xz
+        else
+            ./compile.sh \
+            BOARD=${{ inputs.board }} \
+            BRANCH=${{ inputs.branch }} \
+            RELEASE=${{ env.release }} \
+            BUILD_MINIMAL=${{ env.build-minimal }} \
+            BUILD_DESKTOP=${{ env.build-desktop }} \
+            KERNEL_CONFIGURE=no \
+            DESKTOP_ENVIRONMENT=${{ env.desktop-environment }} \
+            DESKTOP_ENVIRONMENT_CONFIG_NAME=${{ env.desktop-environment-config-name }} \
+            DESKTOP_APPGROUPS_SELECTED=${{ env.desktop_appgroups_selected }} \
+            EXPERT=${{ env.expert }} \
+            BOARD_FIRMWARE_INSTALL="-full" \
+            SHARE_LOG=yes \
+            DEBUG=yes \
+            KERNEL_GIT=shallow \
+            COMPRESS_OUTPUTIMAGE=sha,gpg,xz
+        fi
+    - name: Upload
+      if: inputs.release-id != '' && inputs.github-token != ''
+      uses: xresloader/upload-to-github-release@v1
+      env:
+          GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        release_id: ${{ inputs.release-id }}
+        file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb"
+        draft: false
+        overwrite: true
+    - name: Rollback release
+      if: failure() && inputs.release-id != '' && inputs.github-token != ''
+      uses: author/action-rollback@stable
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        release_id: ${{ inputs.release-id }}
