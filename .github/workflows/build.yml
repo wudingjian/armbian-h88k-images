@@ -35,7 +35,7 @@ jobs:
         BOARD: [hinlink-h88k]
         DISTRO: [armbian]
         FLAVOR: [ubuntu, cli]
-        BRANCH: [rk-6.1-rkr3]
+        BRANCH: [vendor]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
