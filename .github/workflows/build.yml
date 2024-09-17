@@ -41,10 +41,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Create necessary directories
+        run: |
+          mkdir -p arch/arm64/boot/dts/rockchip
+
       - name: Apply board patch
         run: |
           patch -p1 < board-makfile-add-hinlink-h88k.patch
-        working-directory: .
 
       - name: Copy board configuration
         run: |
@@ -53,8 +56,7 @@ jobs:
 
       - name: Copy device tree
         run: |
-          mkdir -p build/arch/arm64/boot/dts/rockchip
-          cp rk3588-hinlink-h88k.dts build/arch/arm64/boot/dts/rockchip/
+          cp rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/
 
       - name: Upload Armbian image
         uses: amazingfate/armbian-compile-action@main
