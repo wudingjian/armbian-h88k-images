@@ -39,68 +39,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Apply board Makefile patch
-        run: |
-          cd build
-          git apply ../../board-makfile-add-hinlink-h88k.patch
-      - name: Copy DTS file
-        run: |
-          cd build
-          mkdir -p arch/arm64/boot/dts/rockchip/
-          cp ../../rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/
-      - name: Build
-        shell: bash
-        run: |
-          cd build
-          touch .ignore_changes
-          sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
-          git status
-          docker pull ghcr.io/armbian/docker-armbian-build:armbian-ubuntu-jammy-latest
-          if [ ${{ matrix.FLAVOR }} == "cli" ]; then
-              ./compile.sh \
-              BOARD=${{ matrix.BOARD }} \
-              BRANCH=${{ matrix.BRANCH }} \
-              RELEASE=noble \
-              BUILD_MINIMAL=no \
-              BUILD_DESKTOP=no \
-              KERNEL_CONFIGURE=no \
-              EXPERT=yes \
-              BOARD_FIRMWARE_INSTALL="-full" \
-              SHARE_LOG=yes \
-              DEBUG=yes \
-              COMPRESS_OUTPUTIMAGE=sha,gpg,xz
-          else
-              ./compile.sh \
-              BOARD=${{ matrix.BOARD }} \
-              BRANCH=${{ matrix.BRANCH }} \
-              RELEASE=noble \
-              BUILD_MINIMAL=no \
-              BUILD_DESKTOP=yes \
-              KERNEL_CONFIGURE=no \
-              DESKTOP_ENVIRONMENT=gnome \
-              DESKTOP_ENVIRONMENT_CONFIG_NAME=config_base \
-              EXPERT=yes \
-              DESKTOP_APPGROUPS_SELECTED="browsers chat desktop_tools editors email internet multimedia office programming remote_desktop" \
-              BOARD_FIRMWARE_INSTALL="-full" \
-              SHARE_LOG=yes \
-              DEBUG=yes \
-              KERNEL_GIT=shallow \
-              COMPRESS_OUTPUTIMAGE=sha,gpg,xz
-          fi
-      - name: Upload
-        if: needs.prepare_release.outputs.release_id != '' && secrets.GITHUB_TOKEN != ''
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Armbian image
+        uses: wudingjian/armbian-compile-action@main
+        if: matrix.DISTRO == 'armbian'
         with:
-          release_id: ${{ needs.prepare_release.outputs.release_id }}
-          file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb"
-          draft: false
-          overwrite: true
-      - name: Rollback release
-        if: failure() && needs.prepare_release.outputs.release_id != '' && secrets.GITHUB_TOKEN != ''
-        uses: author/action-rollback@stable
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ needs.prepare_release.outputs.release_id }}
+          branch: ${{ matrix.BRANCH }}
+          board: ${{ matrix.BOARD }}
+          flavor: ${{ matrix.FLAVOR }}
+          release-id: ${{ needs.prepare_release.outputs.release_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
