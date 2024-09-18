@@ -11,6 +11,6 @@
  ## 驱动支持状态:
  - [x] panfork-mesa
  - [x] rockchip-multimedia
- - [x] rkmpp_jellyfin
+ - [x] rkmpp for [jellyfin](https://jellyfin.org/docs/general/administration/hardware-acceleration/rockchip/#speed-and-quality)
 
 Download: https://github.com/wudingjian/armbian-h88k-images/releases/latest
