@@ -105,8 +105,7 @@ runs:
         # 目录对应 /workflows/build.yml  BRANCH: [vendor] 的设定
         
         # 8.增加显卡驱动交叉编译
-        # 8.1 panfork-mesa 是一个与 Mesa 3D 图形库相关的软件包集合。提供对 3D 图形 API 的实现，如 OpenGL 和 Vulkan。提供图形驱动程序，特别是与 ARM Mali GPU 相关的驱动程序。
-提供对图形渲染的支持，特别是对开源 GPU 驱动程序的支持。
+        # 8.1 panfork-mesa 是一个与 Mesa 3D 图形库相关的软件包集合。提供对 3D 图形 API 的实现，提供图形驱动程序，特别是与 ARM Mali GPU 相关的驱动程序。提供对图形渲染的支持，特别是对开源 GPU 驱动程序的支持。
         mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
         # 创建目录以存放rockchip-multimedia的APT源文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
