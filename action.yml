@@ -61,49 +61,70 @@ runs:
       run: |
         cd ./build
         touch .ignore_changes
-       
-        # 下载新的 DTS 文件
+        
+        ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
+        # 1.下载新的 V1_dts 文件
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O /tmp/rk3588-hinlink-h88k.dts
-        # 查找并替换所有的 rk3588-hinlink-h88k.dts 文件
+        # 使用 wget 命令从指定 URL 下载新的 rk3588-hinlink-h88k.dts 文件，并将其保存到 /tmp 目录下。
+        
+        # 2.查找并替换所有的 rk3588-hinlink-h88k.dts 文件
         find . -name 'rk3588-hinlink-h88k.dts' -exec cp /tmp/rk3588-hinlink-h88k.dts {} \;
-             
-        # 创建目录并下载 DTS 文件
+        # 使用 find 命令在当前目录及其子目录中查找名为 rk3588-hinlink-h88k.dts 的文件，并用下载的文件进行替换。
+
+        # 3.创建目录并下载 V1_dts 文件
         mkdir -p arch/arm64/boot/dts/rockchip/
+        # 使用 mkdir 命令创建目标目录，如果目录不存在则创建。
+        
+        # 4.下载新的 V1_dts 文件 至 arch/arm64/boot/dts/rockchip/ 目录
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
-
-        # 检查并修改 Makefile 文件
+        # 使用 wget 命令从指定 URL 下载新的 rk3588-hinlink-h88k.dts 文件，并将其保存到目标目录。
+        
+        # 5.检查并修改 Makefile 文件 增加新 V1_dts 文件 编译请求 （定义路径和请求）
         MAKEFILE_PATH="arch/arm64/boot/dts/rockchip/Makefile"
+        # 定义 Makefile 文件的路径。
         DTS_ENTRY="dtb-\$(CONFIG_ARCH_ROCKCHIP) += rk3588-hinlink-h88k.dtb"
-
-        # 如果 Makefile 文件存在且条目不存在，则添加条目
-        if [ -f "$MAKEFILE_PATH" ]; then
-            if ! grep -q "$DTS_ENTRY" "$MAKEFILE_PATH"; then
-                echo "Adding $DTS_ENTRY to $MAKEFILE_PATH"
-                echo "$DTS_ENTRY" >> "$MAKEFILE_PATH"
+        # 定义需要添加到 Makefile 文件中的条目。
+        
+        # 6.如果 Makefile 文件存在且条目不存在，则添加条目
+        if [ -f "$MAKEFILE_PATH" ]; then     # 检查 Makefile 文件是否存在。
+            if ! grep -q "$DTS_ENTRY" "$MAKEFILE_PATH"; then # 检查 Makefile 文件中是否已经包含了该条目。
+                echo "Adding $DTS_ENTRY to $MAKEFILE_PATH" # 如果条目不存在，输出提示信息。
+                echo "$DTS_ENTRY" >> "$MAKEFILE_PATH" # 将条目添加到 Makefile 文件末尾。
             else
-                echo "$DTS_ENTRY already exists in $MAKEFILE_PATH"
+                echo "$DTS_ENTRY already exists in $MAKEFILE_PATH" # 如果条目已经存在，输出提示信息。
             fi
         else
-            echo "$MAKEFILE_PATH does not exist. Creating file and adding $DTS_ENTRY"
-            mkdir -p "$(dirname "$MAKEFILE_PATH")"
-            echo "$DTS_ENTRY" > "$MAKEFILE_PATH"
+            echo "$MAKEFILE_PATH does not exist. Creating file and adding $DTS_ENTRY"   # 如果 Makefile 文件不存在，输出提示信息。
+            mkdir -p "$(dirname "$MAKEFILE_PATH")" # 创建 Makefile 文件所在的目录。
+            echo "$DTS_ENTRY" > "$MAKEFILE_PATH"  # 创建 Makefile 文件并添加条目。
         fi
-
-        # 生成补丁文件
-        mkdir -p patch/kernel/rk35xx-vendor-6.1
+        # 7.生成补丁文件
+        mkdir -p patch/kernel/rk35xx-vendor-6.1 # 目录对应 /workflows/build.yml  BRANCH: [vendor] 的设定
         git diff --no-index --output=./patch/kernel/rk35xx-vendor-6.1/board-dts-add-hinlink-h88k.patch /dev/null arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts || ls -l ./patch/kernel/rk35xx-vendor-6.1/board-dts-add-hinlink-h88k.patch
-
+        # 使用 git diff 生成补丁文件，将新的 dts 文件与空文件进行比较，输出补丁文件到指定路径。如果生成失败，则列出补丁文件。
+        # 目录对应 /workflows/build.yml  BRANCH: [vendor] 的设定
         
-
-        mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
+        # 8.增加显卡驱动交叉编译
+        # 8.1 panfork-mesa 是一个与 Mesa 3D 图形库相关的软件包集合。提供对 3D 图形 API 的实现，如 OpenGL 和 Vulkan。提供图形驱动程序，特别是与 ARM Mali GPU 相关的驱动程序。
+提供对图形渲染的支持，特别是对开源 GPU 驱动程序的支持。
+        mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/ # 创建目录以存放 rockchip-multimedia 的 APT 源文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
+        # 下载 rockchip-multimedia 的 GPG 密钥文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
+        # 下载 rockchip-multimedia 的源列表文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.packages -O config/desktop/jammy/appgroups/rockchip-multimedia/packages
+        # 下载 rockchip-multimedia 的包列表文件。
         
-        mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
+        # 8.2 rockchip-multimedia 是一个与 Rockchip 平台相关的多媒体软件包集合。提供音频和视频编解码器，支持多种格式如 H.264、H.265、VP8、VP9 等。提供多媒体处理工具，如视频缩放、旋转和其他图像处理功能。提供硬件加速支持，利用 Rockchip SoC 的多媒体处理单元（VPU 和 GPU）。
+        mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/ # 创建目录以存放 panfork-mesa 的 APT 源文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
+        # 下载 panfork-mesa 的 GPG 密钥文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
+        # 下载 panfork-mesa 的源列表文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.packages -O config/desktop/jammy/appgroups/panfork-mesa/packages
+        # 下载 panfork-mesa 的包列表文件。
+        
+        ##  以上为针对rk3588-hinlink-h88k_V1_dts的修改
         
         sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
         git status
