@@ -107,7 +107,8 @@ runs:
         # 8.增加显卡驱动交叉编译
         # 8.1 panfork-mesa 是一个与 Mesa 3D 图形库相关的软件包集合。提供对 3D 图形 API 的实现，如 OpenGL 和 Vulkan。提供图形驱动程序，特别是与 ARM Mali GPU 相关的驱动程序。
 提供对图形渲染的支持，特别是对开源 GPU 驱动程序的支持。
-        mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/ # 创建目录以存放 rockchip-multimedia 的 APT 源文件。
+        mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
+        # 创建目录以存放rockchip-multimedia的APT源文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
         # 下载 rockchip-multimedia 的 GPG 密钥文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
@@ -116,7 +117,8 @@ runs:
         # 下载 rockchip-multimedia 的包列表文件。
         
         # 8.2 rockchip-multimedia 是一个与 Rockchip 平台相关的多媒体软件包集合。提供音频和视频编解码器，支持多种格式如 H.264、H.265、VP8、VP9 等。提供多媒体处理工具，如视频缩放、旋转和其他图像处理功能。提供硬件加速支持，利用 Rockchip SoC 的多媒体处理单元（VPU 和 GPU）。
-        mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/ # 创建目录以存放 panfork-mesa 的 APT 源文件。
+        mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
+        # 创建目录以存放panfork-mesa的APT源文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
         # 下载 panfork-mesa 的 GPG 密钥文件。
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
