@@ -34,13 +34,14 @@ jobs:
       matrix:
         BOARD: [hinlink-h88k]
         DISTRO: [armbian]
-        FLAVOR: [ubuntu, cli]
-        BRANCH: [vendor]
+        FLAVOR: [ubuntu, cli] #  cli 为服务器版本
+        BRANCH: [vendor]  # 版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
+                          #  [legacy]  v5.10.160 对应 armbian/build/  patch/kernel/rk35xx-legacy
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Upload Armbian image
-        uses: wudingjian/armbian-h88k-images@master
+        uses: wudingjian/armbian-h88k-images@master # 指向本库 action.yml armbian 编译操作 工作流 （适用于 Armbian 的 GitHub 操作命令compile） 
         if: matrix.DISTRO == 'armbian'
         with:
           branch: ${{ matrix.BRANCH }}
