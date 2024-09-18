@@ -35,8 +35,10 @@ jobs:
         BOARD: [hinlink-h88k]
         DISTRO: [armbian]
         FLAVOR: [ubuntu, cli] #  cli 为服务器版本
-        BRANCH: [vendor]  # 版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
+        BRANCH: [vendor]  #  版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
                           #  [legacy]  v5.10.160 对应 armbian/build/  patch/kernel/rk35xx-legacy
+                          #  rk3588-hinlink-h88k.dts 替换目录需要根据以上版本进行调整
+                          #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
     steps:
       - name: Checkout
         uses: actions/checkout@v2
