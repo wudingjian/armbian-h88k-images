@@ -9,6 +9,7 @@
  - [x] PCIE3X4
  - [x] USB
  ## 驱动支持状态:
+ - [x] RKNPU driver: v0.9.7
  - [x] panfork-mesa
  - [x] rockchip-multimedia
  - [x] rkmpp for [jellyfin](https://jellyfin.org/docs/general/administration/hardware-acceleration/rockchip/#speed-and-quality)
