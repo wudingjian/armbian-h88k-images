@@ -1,4 +1,4 @@
-# Armbian images for H88K_v1
+# Armbian images for H88K_v1 （仅适用于V1版本）
 [![image_build](https://github.com/amazingfate/armbian-h88k-images/workflows/Build/badge.svg)](https://github.com/amazingfate/armbian-h88k-images/actions/workflows/build.yml)
 
 ## 当前设备树支持状态：
