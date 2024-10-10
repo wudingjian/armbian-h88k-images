@@ -1,0 +1,53 @@
+name: Build
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:  # 启用手动触发
+
+jobs:
+  prepare_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get time
+        id: time
+        uses: nanzm/get-time-action@v1.1
+        with:
+          format: 'YYYYMMDD-HHmm'
+      - name: Create empty release
+        id: release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.time.outputs.time }}
+          body_path: README.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target_commitish: master
+          draft: false
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+  build:
+    runs-on: ubuntu-latest
+    needs: prepare_release
+    strategy:
+      matrix:
+        BOARD: [hinlink-h88k]
+        DISTRO: [armbian]
+        FLAVOR: [debian, cli] #  cli 为服务器版本
+        BRANCH: [vendor]  #  版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
+                          #  [legacy]  v5.10.160 对应 armbian/build/  patch/kernel/rk35xx-legacy
+                          #  rk3588-hinlink-h88k.dts 替换目录需要根据以上版本进行调整
+                          #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Upload Armbian image
+        uses: wudingjian/armbian-h88k-images@master # 指向本库 action.yml armbian 编译操作 工作流 （适用于 Armbian 的 GitHub 操作命令compile） 
+        if: matrix.DISTRO == 'armbian'
+        with:
+          branch: ${{ matrix.BRANCH }}
+          board: ${{ matrix.BOARD }}
+          flavor: ${{ matrix.FLAVOR }}
+          release-id: ${{ needs.prepare_release.outputs.release_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
