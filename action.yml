@@ -74,11 +74,10 @@ runs:
         # 1. 下载压缩包
         wget https://raw.githubusercontent.com/airockchip/rknn-llm/refs/heads/main/rknpu-driver/rknpu_driver_0.9.8_20241009.tar.bz2 -O /tmp/rknpu_driver.tar.bz2
         
-        # 2. 解压该压缩包
-        tar -xjvf /tmp/rknpu_driver.tar.bz2 -C /tmp
-        
-        # 3. 覆盖到当前内核代码目录
-        cp -r /tmp/driver/* kernel/drivers/npu/
+        # 2. 解压压缩包，并覆盖当前内核代码目录
+        mkdir -p /tmp/rknpu_driver
+        tar -xjvf /tmp/rknpu_driver.tar.bz2 -C /tmp/rknpu_driver
+        cp -r /tmp/rknpu_driver/*/* kernel/drivers/npu/
         
         # 4. 修改内核头文件 kernel/include/linux/mm.h
         HEADER_FILE="kernel/include/linux/mm.h"
@@ -94,7 +93,7 @@ runs:
             echo "$HEADER_FILE 不存在。"
         fi
 
-        
+        # 编译
         cd ./build
         touch .ignore_changes
         
