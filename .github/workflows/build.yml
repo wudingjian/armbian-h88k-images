@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest  # 运行环境：最新 Ubuntu 系统
     steps:
       - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v4  # 使用官方 checkout action
+        uses: actions/checkout@v5  # 使用官方 checkout action
       - name: Get time  # 步骤2：获取当前时间
         id: time  # 步骤标识符，用于后续引用
         uses: nanzm/get-time-action@v1.1  # 使用第三方时间获取 action
@@ -43,7 +43,7 @@ jobs:
                           #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
     steps:
       - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v4  # 使用官方 checkout action
+        uses: actions/checkout@v5  # 使用官方 checkout action
       - name: Upload Armbian image  # 步骤2：构建并上传 Armbian 镜像
         uses: wudingjian/armbian-h88k-images@master  # 使用当前仓库 构建 action
         if: matrix.DISTRO == 'armbian'  # 条件执行：只在构建 Armbian 时运行
