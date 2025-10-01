@@ -1,55 +1,53 @@
-name: Build  # 工作流名称：构建流程
-
+name: Build
 on:
   #push:
     #branches:
-      #- master  # 触发条件：推送到 master 分支时自动运行
-  workflow_dispatch:  # 启用手动触发：允许在 GitHub 界面上手动启动
+      #- master
+  workflow_dispatch:  # 启用手动触发
 
 jobs:
-  prepare_release:  # 第一个任务：准备发布版本
-    runs-on: ubuntu-latest  # 运行环境：最新 Ubuntu 系统
+  prepare_release:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v5  # 使用官方 checkout action
-      - name: Get time  # 步骤2：获取当前时间
-        id: time  # 步骤标识符，用于后续引用
-        uses: nanzm/get-time-action@v1.1  # 使用第三方时间获取 action
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Get time
+        id: time
+        uses: nanzm/get-time-action@v1.1
         with:
-          format: 'YYYYMMDD-HHmm'  # 时间格式：年月日-时分
-      - name: Create empty release  # 步骤3：创建空发布版本
-        id: release  # 步骤标识符
-        uses: softprops/action-gh-release@v1  # 使用 GitHub 发布 action
+          format: 'YYYYMMDD-HHmm'
+      - name: Create empty release
+        id: release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.time.outputs.time }}  # 使用时间戳作为版本标签
-          body_path: README.md  # 发布说明内容来自 README.md
-          token: ${{ secrets.GITHUB_TOKEN }}  # GitHub 认证令牌
-          target_commitish: master  # 基于 master 分支创建发布
-          draft: false  # 立即发布，不存为草稿
+          tag_name: ${{ steps.time.outputs.time }}
+          body_path: README.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+          target_commitish: master
+          draft: false
     outputs:
-      release_id: ${{ steps.release.outputs.id }}  # 输出发布ID给后续任务使用
-
-  build:  # 第二个任务：构建系统镜像
-    runs-on: ubuntu-latest  # 运行环境：最新 Ubuntu 系统
-    needs: prepare_release  # 依赖关系：必须在 prepare_release 完成后执行
+      release_id: ${{ steps.release.outputs.id }}
+  build:
+    runs-on: ubuntu-latest
+    needs: prepare_release
     strategy:
-      matrix:  # 矩阵策略：并行构建多个配置组合
-        BOARD: [hinlink-h88k]  # 开发板型号：hinlink-h88k
-        DISTRO: [armbian]  # 系统类型：Armbian 发行版
-        FLAVOR: [ubuntu, cli] # 系统风格：ubuntu(桌面版) 和 cli(服务器版)
+      matrix:
+        BOARD: [hinlink-h88k]
+        DISTRO: [armbian]
+        FLAVOR: [ubuntu, cli] #  cli 为服务器版本
         BRANCH: [vendor]  #  版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
                           #  [legacy]  v5.10.160 对应 armbian/build/  patch/kernel/rk35xx-legacy
                           #  rk3588-hinlink-h88k.dts 替换目录需要根据以上版本进行调整
                           #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
     steps:
-      - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v5  # 使用官方 checkout action
-      - name: Upload Armbian image  # 步骤2：构建并上传 Armbian 镜像
-        uses: wudingjian/armbian-h88k-images@master # 使用当前仓库 构建 action
-        if: matrix.DISTRO == 'armbian'  # 条件执行：只在构建 Armbian 时运行
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Upload Armbian image
+        uses: wudingjian/armbian-h88k-images@master # 指向本库 action.yml armbian 编译操作 工作流 （适用于 Armbian 的 GitHub 操作命令compile） 
+        if: matrix.DISTRO == 'armbian'
         with:
-          branch: ${{ matrix.BRANCH }}  # 内核分支版本
-          board: ${{ matrix.BOARD }}  # 开发板型号
-          flavor: ${{ matrix.FLAVOR }}  # 系统风格
-          release-id: ${{ needs.prepare_release.outputs.release_id }}  # 发布版本ID
-          github-token: ${{ secrets.GITHUB_TOKEN }}  # GitHub 认证令牌
+          branch: ${{ matrix.BRANCH }}
+          board: ${{ matrix.BOARD }}
+          flavor: ${{ matrix.FLAVOR }}
+          release-id: ${{ needs.prepare_release.outputs.release_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
