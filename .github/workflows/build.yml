@@ -37,7 +37,10 @@ jobs:
         BOARD: [hinlink-h88k]  # 开发板型号：hinlink-h88k
         DISTRO: [armbian]  # 系统类型：Armbian 发行版
         FLAVOR: [ubuntu, cli] # 系统风格：ubuntu(桌面版) 和 cli(服务器版)
-        BRANCH: [vendor]  # 内核分支：vendor(对应 Linux 6.1.75 内核)
+        BRANCH: [vendor]  #  版本选择 [vendor] v6.1.75 对应 armbian/build/  patch/kernel/rk35xx-vendor-6.1
+                          #  [legacy]  v5.10.160 对应 armbian/build/  patch/kernel/rk35xx-legacy
+                          #  rk3588-hinlink-h88k.dts 替换目录需要根据以上版本进行调整
+                          #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
     steps:
       - name: Checkout  # 步骤1：检出代码
         uses: actions/checkout@v2  # 使用官方 checkout action
