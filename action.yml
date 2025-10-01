@@ -81,18 +81,20 @@ runs:
         cp -r /tmp/driver/* kernel/drivers/npu/
         
         # 4. 修改内核头文件 kernel/include/linux/mm.h
-        echo "static inline void vm_flags_set(struct vm_area_struct *vma, vm_flags_t flags) {
-            vma->vm_flags |= flags;
-        }
-        static inline void vm_flags_clear(struct vm_area_struct *vma, vm_flags_t flags) {
-            vma->vm_flags &= ~flags;
-        }" >> kernel/include/linux/mm.h
+        HEADER_FILE="kernel/include/linux/mm.h"
+        if [ -f "$HEADER_FILE" ]; then
+            echo "static inline void vm_flags_set(struct vm_area_struct *vma, vm_flags_t flags) {" >> "$HEADER_FILE"
+            echo "    vma->vm_flags |= flags;" >> "$HEADER_FILE"
+            echo "}" >> "$HEADER_FILE"
+            echo "" >> "$HEADER_FILE"
+            echo "static inline void vm_flags_clear(struct vm_area_struct *vma, vm_flags_t flags) {" >> "$HEADER_FILE"
+            echo "    vma->vm_flags &= ~flags;" >> "$HEADER_FILE"
+            echo "}" >> "$HEADER_FILE"
+        else
+            echo "$HEADER_FILE 不存在。"
+        fi
+
         
-        # 5. 重新编译内核
-        make -C kernel/ ARCH=arm64 O=../output \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            linux-image-current-rockchip-rk3588_1.0.8_arm64.deb
-  
         cd ./build
         touch .ignore_changes
         
