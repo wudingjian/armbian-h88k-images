@@ -173,7 +173,6 @@ runs:
         overwrite: true
     - name: Rollback release
       if: failure() && inputs.release-id != '' && inputs.github-token != ''
-      working-directory: ${{ github.workspace }}  # 确保在工作区根目录
       uses: author/action-rollback@stable
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
