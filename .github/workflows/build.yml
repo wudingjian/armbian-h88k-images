@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest  # 运行环境：最新 Ubuntu 系统
     steps:
       - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v2  # 使用官方 checkout action
+        uses: actions/checkout@v4  # 使用官方 checkout action
       - name: Get time  # 步骤2：获取当前时间
         id: time  # 步骤标识符，用于后续引用
         uses: nanzm/get-time-action@v1.1  # 使用第三方时间获取 action
