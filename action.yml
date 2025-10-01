@@ -62,6 +62,9 @@ runs:
         cd ./build
         touch .ignore_changes
         
+        # 添加 binfmt_misc 跳过配置
+        echo "ARMBIAN_SKIP_QEMU=yes" >> $GITHUB_ENV
+        
         ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
         # 1.下载新的 V1_dts 文件
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O /tmp/rk3588-hinlink-h88k.dts
