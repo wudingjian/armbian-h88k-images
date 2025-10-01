@@ -24,7 +24,7 @@ runs:
         remove-codeql: 'true'
         remove-docker-images: 'true'
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v3
       with:
         repository: armbian/build
         ref: main
@@ -173,11 +173,8 @@ runs:
         overwrite: true
     - name: Rollback release
       if: failure() && inputs.release-id != '' && inputs.github-token != ''
-      run: |
-        echo "Rolling back release ID: ${{ inputs.release-id }}"
-        curl -s -X DELETE \
-          -H "Authorization: token ${{ inputs.github-token }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "https://api.github.com/repos/${{ github.repository }}/releases/${{ inputs.release-id }}" || \
-        echo "Release rollback completed or failed (non-critical)"
-      shell: bash
+      uses: author/action-rollback@stable
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        release_id: ${{ inputs.release-id }}
