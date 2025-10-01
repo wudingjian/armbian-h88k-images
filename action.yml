@@ -24,7 +24,7 @@ runs:
         remove-codeql: 'true'
         remove-docker-images: 'true'
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v3
       with:
         repository: armbian/build
         ref: main
@@ -61,9 +61,6 @@ runs:
       run: |
         cd ./build
         touch .ignore_changes
-        
-        # 添加 binfmt_misc 跳过配置
-        echo "ARMBIAN_SKIP_QEMU=yes" >> $GITHUB_ENV
         
         ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
         # 1.下载新的 V1_dts 文件
