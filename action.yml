@@ -122,7 +122,7 @@ runs:
         
         ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
         # 1.从本地目录复制V1_dts文件到临时目录
-        cp ../armbian-h88k-images/rk3588-hinlink-h88k.dts /tmp/rk3588-hinlink-h88k.dts
+        cp ../rk3588-hinlink-h88k.dts /tmp/rk3588-hinlink-h88k.dts
         # 使用cp命令从当前工作目录的上级目录中的armbian-h88k-images文件夹复制rk3588-hinlink-h88k.dts文件到/tmp目录下
 
         # 2.查找并替换所有的rk3588-hinlink-h88k.dts文件
@@ -134,7 +134,7 @@ runs:
         # 使用mkdir命令创建arch/arm64/boot/dts/rockchip/目录，-p参数确保如果目录不存在则创建，如果已存在则不报错
 
         # 4.从本地目录复制V1_dts文件到目标目录
-        cp ../armbian-h88k-images/rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
+        cp ../rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
         # 使用cp命令从当前工作目录的上级目录中的armbian-h88k-images文件夹复制rk3588-hinlink-h88k.dts文件到arch/arm64/boot/dts/rockchip/目录
 
         # 5.检查并修改Makefile文件，增加新V1_dts文件的编译请求
@@ -181,11 +181,11 @@ runs:
         # 提供多媒体处理工具和硬件加速支持
         mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
         # 创建目录以存放rockchip-multimedia的APT源文件
-        cp ../armbian-h88k-images/liujianfeng1994.gpg config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
+        cp ../liujianfeng1994.gpg config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
         # 从本地目录复制rockchip-multimedia的GPG密钥文件
-        cp ../armbian-h88k-images/rockchip-multimedia.source config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
+        cp ../rockchip-multimedia.source config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
         # 从本地目录复制rockchip-multimedia的源列表文件
-        cp ../armbian-h88k-images/rockchip-multimedia.packages config/desktop/jammy/appgroups/rockchip-multimedia/packages
+        cp ../rockchip-multimedia.packages config/desktop/jammy/appgroups/rockchip-multimedia/packages
         # 从本地目录复制rockchip-multimedia的包列表文件
 
         # 8.2 配置panfork-mesa相关文件
@@ -194,11 +194,11 @@ runs:
         # 提供对图形渲染的支持，特别是对开源GPU驱动程序的支持
         mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
         # 创建目录以存放panfork-mesa的APT源文件
-        cp ../armbian-h88k-images/liujianfeng1994.gpg config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
+        cp ../liujianfeng1994.gpg config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
         # 从本地目录复制panfork-mesa的GPG密钥文件
-        cp ../armbian-h88k-images/panfork-mesa.source config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
+        cp ../panfork-mesa.source config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
         # 从本地目录复制panfork-mesa的源列表文件
-        cp ../armbian-h88k-images/panfork-mesa.packages config/desktop/jammy/appgroups/panfork-mesa/packages
+        cp ../panfork-mesa.packages config/desktop/jammy/appgroups/panfork-mesa/packages
         # 从本地目录复制panfork-mesa的包列表文件
         
         ##  以上为针对rk3588-hinlink-h88k_V1_dts的修改
