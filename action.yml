@@ -27,11 +27,12 @@ runs:
     - name: Install build dependencies
       shell: bash
       run: |
-        apt-get update
-        apt-get install -y binfmt-support qemu-user-static
-        update-binfmts --enable qemu-arm
-        update-binfmts --enable qemu-aarch64
-        update-binfmts --enable qemu-riscv64
+        sudo apt-get update
+        sudo apt-get install -y binfmt-support qemu-user-static
+        sudo update-binfmts --enable qemu-arm
+        sudo update-binfmts --enable qemu-aarch64
+        sudo update-binfmts --enable qemu-riscv64
+
         
     - name: Checkout
       uses: actions/checkout@v3
