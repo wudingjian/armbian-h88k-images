@@ -24,7 +24,7 @@ runs:
         remove-codeql: 'true'
         remove-docker-images: 'true'
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: armbian/build
         ref: main
@@ -173,6 +173,7 @@ runs:
         overwrite: true
     - name: Rollback release
       if: failure() && inputs.release-id != '' && inputs.github-token != ''
+      working-directory: ${{ github.workspace }}  # 确保在工作区根目录
       uses: author/action-rollback@stable
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
