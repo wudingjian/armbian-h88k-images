@@ -1,309 +1,180 @@
-# 定义GitHub Action的名称
 name: 'Armbian/build'
-# 描述这个GitHub Action的用途
 description: 'Armbian Linux build framework'
-# 定义输入参数
 inputs:
-  # 板卡型号，必须提供
   board:
     required: true
-  # 系统风味，必须提供
   flavor:
     required: true
-  # 发布ID，可选参数
   release-id:
     required: false
-  # GitHub令牌，可选参数
   github-token:
     required: false
-# 定义Action的运行方式
 runs:
-  # 使用复合模式运行多个步骤
   using: "composite"
-  # 定义具体的执行步骤
   steps:
-    # 步骤1：释放更多磁盘空间
     - name: Get more space
-      # 使用第三方Action来最大化构建空间
       uses: easimon/maximize-build-space@master
-      # 配置参数
       with:
-        # 保留的根分区空间大小（MB）
         root-reserve-mb: 25600
-        # 保留的临时文件空间大小（MB）
         temp-reserve-mb: 4096
-        # 交换空间大小（MB）
         swap-size-mb: 1024
-        # 移除.NET相关文件以节省空间
         remove-dotnet: 'true'
-        # 移除Android相关文件以节省空间
         remove-android: 'true'
-        # 移除Haskell相关文件以节省空间
         remove-haskell: 'true'
-        # 移除CodeQL相关文件以节省空间
         remove-codeql: 'true'
-        # 移除Docker镜像以节省空间
         remove-docker-images: 'true'
-    # 步骤2：检出Armbian构建框架代码
     - name: Checkout
-      # 使用官方的checkout Action
       uses: actions/checkout@v3
-      # 配置参数
       with:
-        # 指定要检出的仓库
         repository: armbian/build
-        # 指定要检出的分支
         ref: main
-        # 指定检出代码的存放路径
         path: build
-    # 步骤3：设置构建环境变量
     - name: Set env
-      # 使用bash shell执行
       shell: bash
-      # 执行命令
       run: |
-        # 如果风味是debian
         if [ "${{ inputs.flavor }}" == "debian" ]; then
-          # 设置发布版本为sid（Debian不稳定版）
           echo "release=sid" >> $GITHUB_ENV
-          # 不构建最小化系统
           echo "build-minimal=no" >> $GITHUB_ENV
-          # 构建桌面版系统
           echo "build-desktop=yes" >> $GITHUB_ENV
-          # 设置桌面环境为GNOME
           echo "desktop-environment=gnome" >> $GITHUB_ENV
-          # 设置桌面环境配置名称
           echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
-          # 不使用专家模式
           echo "expert=no" >> $GITHUB_ENV
-        # 如果风味是ubuntu
         elif [ "${{ inputs.flavor }}" == "ubuntu" ]; then
-          # 设置发布版本为noble（Ubuntu 24.04）
           echo "release=noble" >> $GITHUB_ENV
-          # 不构建最小化系统
           echo "build-minimal=no" >> $GITHUB_ENV
-          # 构建桌面版系统
           echo "build-desktop=yes" >> $GITHUB_ENV
-          # 设置桌面环境为GNOME
           echo "desktop-environment=gnome" >> $GITHUB_ENV
-          # 设置桌面环境配置名称
           echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
-          # 使用专家模式
           echo "expert=yes" >> $GITHUB_ENV
-          # 设置要安装的桌面应用组
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
-        # 如果风味是cli（命令行界面）
         elif [ "${{ inputs.flavor }}" == "cli" ]; then
-          # 设置发布版本为noble（Ubuntu 24.04）
           echo "release=noble" >> $GITHUB_ENV
-          # 不构建最小化系统
           echo "build-minimal=no" >> $GITHUB_ENV
-          # 不构建桌面版系统
           echo "build-desktop=no" >> $GITHUB_ENV
-          # 设置桌面环境为GNOME（虽然不构建桌面版，但仍需设置此变量）
           echo "desktop-environment=gnome" >> $GITHUB_ENV
-          # 设置桌面环境配置名称
           echo "desktop-environment-config-name=config_base" >> $GITHUB_ENV
-          # 使用专家模式
           echo "expert=yes" >> $GITHUB_ENV
-          # 设置要安装的桌面应用组（虽然不构建桌面版，但仍需设置此变量）
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
         fi
-    # 步骤4：执行构建过程
     - name: Build
-      # 使用bash shell执行
       shell: bash
-      # 执行命令
       run: |
-        # 切换到build目录
         cd ./build
-        # 创建.ignore_changes文件，忽略文件更改检查
         touch .ignore_changes
         
         ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
-        # 1.从本地目录复制V1_dts文件到临时目录
-        cp ../rk3588-hinlink-h88k.dts /tmp/rk3588-hinlink-h88k.dts
-        # 使用cp命令从当前工作目录的上级目录中的armbian-h88k-images文件夹复制rk3588-hinlink-h88k.dts文件到/tmp目录下
-
-        # 2.查找并替换所有的rk3588-hinlink-h88k.dts文件
+        # 1.下载新的 V1_dts 文件
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O /tmp/rk3588-hinlink-h88k.dts
+        # 使用 wget 命令从指定 URL 下载新的 rk3588-hinlink-h88k.dts 文件，并将其保存到 /tmp 目录下。
+        
+        # 2.查找并替换所有的 rk3588-hinlink-h88k.dts 文件
         find . -name 'rk3588-hinlink-h88k.dts' -exec cp /tmp/rk3588-hinlink-h88k.dts {} \;
-        # 使用find命令在当前目录及其子目录中查找所有名为rk3588-hinlink-h88k.dts的文件，并用/tmp目录下的新文件替换它们
+        # 使用 find 命令在当前目录及其子目录中查找名为 rk3588-hinlink-h88k.dts 的文件，并用下载的文件进行替换。
 
-        # 3.创建目标目录
+        # 3.创建目录并下载 V1_dts 文件
         mkdir -p arch/arm64/boot/dts/rockchip/
-        # 使用mkdir命令创建arch/arm64/boot/dts/rockchip/目录，-p参数确保如果目录不存在则创建，如果已存在则不报错
-
-        # 4.从本地目录复制V1_dts文件到目标目录
-        cp ../rk3588-hinlink-h88k.dts arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
-        # 使用cp命令从当前工作目录的上级目录中的armbian-h88k-images文件夹复制rk3588-hinlink-h88k.dts文件到arch/arm64/boot/dts/rockchip/目录
-
-        # 5.检查并修改Makefile文件，增加新V1_dts文件的编译请求
+        # 使用 mkdir 命令创建目标目录，如果目录不存在则创建。
+        
+        # 4.下载新的 V1_dts 文件 至 arch/arm64/boot/dts/rockchip/ 目录
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
+        # 使用 wget 命令从指定 URL 下载新的 rk3588-hinlink-h88k.dts 文件，并将其保存到目标目录。
+        
+        # 5.检查并修改 Makefile 文件 增加新 V1_dts 文件 编译请求 （定义路径和请求）
         MAKEFILE_PATH="arch/arm64/boot/dts/rockchip/Makefile"
-        # 定义Makefile文件的路径变量
+        # 定义 Makefile 文件的路径。
         DTS_ENTRY="dtb-\$(CONFIG_ARCH_ROCKCHIP) += rk3588-hinlink-h88k.dtb"
-        # 定义需要添加到Makefile文件中的编译条目
-
-        # 6.如果Makefile文件存在且条目不存在，则添加条目
-        if [ -f "$MAKEFILE_PATH" ]; then
-            # 检查Makefile文件是否存在
-            if ! grep -q "$DTS_ENTRY" "$MAKEFILE_PATH"; then
-                # 检查Makefile文件中是否已经包含了该编译条目，如果不存在则添加
-                echo "Adding $DTS_ENTRY to $MAKEFILE_PATH"
-                # 输出提示信息，表示正在添加编译条目到Makefile文件
-                echo "$DTS_ENTRY" >> "$MAKEFILE_PATH"
-                # 将编译条目追加到Makefile文件末尾
+        # 定义需要添加到 Makefile 文件中的条目。
+        
+        # 6.如果 Makefile 文件存在且条目不存在，则添加条目
+        if [ -f "$MAKEFILE_PATH" ]; then     # 检查 Makefile 文件是否存在。
+            if ! grep -q "$DTS_ENTRY" "$MAKEFILE_PATH"; then # 检查 Makefile 文件中是否已经包含了该条目。
+                echo "Adding $DTS_ENTRY to $MAKEFILE_PATH" # 如果条目不存在，输出提示信息。
+                echo "$DTS_ENTRY" >> "$MAKEFILE_PATH" # 将条目添加到 Makefile 文件末尾。
             else
-                # 如果编译条目已经存在
-                echo "$DTS_ENTRY already exists in $MAKEFILE_PATH"
-                # 输出提示信息，表示编译条目已经存在于Makefile文件中
+                echo "$DTS_ENTRY already exists in $MAKEFILE_PATH" # 如果条目已经存在，输出提示信息。
             fi
         else
-            # 如果Makefile文件不存在
-            echo "$MAKEFILE_PATH does not exist. Creating file and adding $DTS_ENTRY"
-            # 输出提示信息，表示Makefile文件不存在，将创建文件并添加编译条目
-            mkdir -p "$(dirname "$MAKEFILE_PATH")"
-            # 创建Makefile文件所在的目录
-            echo "$DTS_ENTRY" > "$MAKEFILE_PATH"
-            # 创建Makefile文件并写入编译条目
+            echo "$MAKEFILE_PATH does not exist. Creating file and adding $DTS_ENTRY"   # 如果 Makefile 文件不存在，输出提示信息。
+            mkdir -p "$(dirname "$MAKEFILE_PATH")" # 创建 Makefile 文件所在的目录。
+            echo "$DTS_ENTRY" > "$MAKEFILE_PATH"  # 创建 Makefile 文件并添加条目。
         fi
-
         # 7.生成补丁文件
-        mkdir -p patch/kernel/rk35xx-vendor-6.1
-        # 创建补丁文件存放目录，对应/workflows/build.yml中BRANCH: [vendor]的设定
+        mkdir -p patch/kernel/rk35xx-vendor-6.1 # 目录对应 /workflows/build.yml  BRANCH: [vendor] 的设定
         git diff --no-index --output=./patch/kernel/rk35xx-vendor-6.1/board-dts-add-hinlink-h88k.patch /dev/null arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts || ls -l ./patch/kernel/rk35xx-vendor-6.1/board-dts-add-hinlink-h88k.patch
-        # 使用git diff生成补丁文件，将新的dts文件与空文件进行比较，输出补丁文件到指定路径
-        # 如果生成失败，则列出补丁文件信息进行调试
-
+        # 使用 git diff 生成补丁文件，将新的 dts 文件与空文件进行比较，输出补丁文件到指定路径。如果生成失败，则列出补丁文件。
+        # 目录对应 /workflows/build.yml  BRANCH: [vendor] 的设定
+        
         # 8.增加显卡驱动交叉编译
-        # 8.1 配置rockchip-multimedia相关文件
-        # rockchip-multimedia是一个与Rockchip平台相关的多媒体软件包集合
-        # 提供音频和视频编解码器，支持多种格式如H.264、H.265、VP8、VP9等
-        # 提供多媒体处理工具和硬件加速支持
+        # 8.1 panfork-mesa 是一个与 Mesa 3D 图形库相关的软件包集合。提供对 3D 图形 API 的实现，提供图形驱动程序，特别是与 ARM Mali GPU 相关的驱动程序。提供对图形渲染的支持，特别是对开源 GPU 驱动程序的支持。
         mkdir -p config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/
-        # 创建目录以存放rockchip-multimedia的APT源文件
-        cp ../liujianfeng1994.gpg config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
-        # 从本地目录复制rockchip-multimedia的GPG密钥文件
-        cp ../rockchip-multimedia.source config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
-        # 从本地目录复制rockchip-multimedia的源列表文件
-        cp ../rockchip-multimedia.packages config/desktop/jammy/appgroups/rockchip-multimedia/packages
-        # 从本地目录复制rockchip-multimedia的包列表文件
-
-        # 8.2 配置panfork-mesa相关文件
-        # panfork-mesa是一个与Mesa 3D图形库相关的软件包集合
-        # 提供对3D图形API的实现，提供图形驱动程序，特别是与ARM Mali GPU相关的驱动程序
-        # 提供对图形渲染的支持，特别是对开源GPU驱动程序的支持
+        # 创建目录以存放rockchip-multimedia的APT源文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.gpg
+        # 下载 rockchip-multimedia 的 GPG 密钥文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.source -O config/desktop/jammy/appgroups/rockchip-multimedia/sources/apt/rockchip-multimedia.source
+        # 下载 rockchip-multimedia 的源列表文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rockchip-multimedia.packages -O config/desktop/jammy/appgroups/rockchip-multimedia/packages
+        # 下载 rockchip-multimedia 的包列表文件。
+        
+        # 8.2 rockchip-multimedia 是一个与 Rockchip 平台相关的多媒体软件包集合。提供音频和视频编解码器，支持多种格式如 H.264、H.265、VP8、VP9 等。提供多媒体处理工具，如视频缩放、旋转和其他图像处理功能。提供硬件加速支持，利用 Rockchip SoC 的多媒体处理单元（VPU 和 GPU）。
         mkdir -p config/desktop/jammy/appgroups/panfork-mesa/sources/apt/
-        # 创建目录以存放panfork-mesa的APT源文件
-        cp ../liujianfeng1994.gpg config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
-        # 从本地目录复制panfork-mesa的GPG密钥文件
-        cp ../panfork-mesa.source config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
-        # 从本地目录复制panfork-mesa的源列表文件
-        cp ../panfork-mesa.packages config/desktop/jammy/appgroups/panfork-mesa/packages
-        # 从本地目录复制panfork-mesa的包列表文件
+        # 创建目录以存放panfork-mesa的APT源文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/liujianfeng1994.gpg -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.gpg
+        # 下载 panfork-mesa 的 GPG 密钥文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.source -O config/desktop/jammy/appgroups/panfork-mesa/sources/apt/panfork-mesa.source
+        # 下载 panfork-mesa 的源列表文件。
+        wget https://github.com/wudingjian/armbian-h88k-images/raw/master/panfork-mesa.packages -O config/desktop/jammy/appgroups/panfork-mesa/packages
+        # 下载 panfork-mesa 的包列表文件。
         
         ##  以上为针对rk3588-hinlink-h88k_V1_dts的修改
         
-        # 修改镜像输出脚本，添加磁盘空间检查和清理命令
         sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
-        # 使用sed命令在extensions/image-output-abl.sh文件的指定位置插入磁盘空间检查和清理命令
-        
-        # 显示git状态，查看文件更改情况
         git status
-        
-        # 拉取Armbian构建Docker镜像
         docker pull ghcr.io/armbian/docker-armbian-build:armbian-ubuntu-jammy-latest
-        
-        # 根据风味类型执行不同的构建命令
         if [ "${{ inputs.flavor }}" == "cli" ]; then
-            # 如果风味是cli（命令行界面），执行CLI版本的构建
             ./compile.sh \
-            # 指定板卡型号
             BOARD=${{ inputs.board }} \
-            # 指定分支
             BRANCH=${{ inputs.branch }} \
-            # 指定发布版本
             RELEASE=${{ env.release }} \
-            # 指定是否构建最小化系统
             BUILD_MINIMAL=${{ env.build-minimal }} \
-            # 指定是否构建桌面版系统
             BUILD_DESKTOP=${{ env.build-desktop }} \
-            # 不配置内核
             KERNEL_CONFIGURE=no \
-            # 指定专家模式
             EXPERT=${{ env.expert }} \
-            # 安装完整的板卡固件
             BOARD_FIRMWARE_INSTALL="-full" \
-            # 共享日志
             SHARE_LOG=yes \
-            # 启用调试模式
             DEBUG=yes \
-            # 压缩输出镜像并生成校验文件
             COMPRESS_OUTPUTIMAGE=sha,gpg,xz
         else
-            # 如果风味不是cli，执行桌面版的构建
             ./compile.sh \
-            # 指定板卡型号
             BOARD=${{ inputs.board }} \
-            # 指定分支
             BRANCH=${{ inputs.branch }} \
-            # 指定发布版本
             RELEASE=${{ env.release }} \
-            # 指定是否构建最小化系统
             BUILD_MINIMAL=${{ env.build-minimal }} \
-            # 指定是否构建桌面版系统
             BUILD_DESKTOP=${{ env.build-desktop }} \
-            # 不配置内核
             KERNEL_CONFIGURE=no \
-            # 指定桌面环境
             DESKTOP_ENVIRONMENT=${{ env.desktop-environment }} \
-            # 指定桌面环境配置名称
             DESKTOP_ENVIRONMENT_CONFIG_NAME=${{ env.desktop-environment-config-name }} \
-            # 指定要安装的桌面应用组
             DESKTOP_APPGROUPS_SELECTED=${{ env.desktop_appgroups_selected }} \
-            # 指定专家模式
             EXPERT=${{ env.expert }} \
-            # 安装完整的板卡固件
             BOARD_FIRMWARE_INSTALL="-full" \
-            # 共享日志
             SHARE_LOG=yes \
-            # 启用调试模式
             DEBUG=yes \
-            # 使用浅克隆方式获取内核代码
             KERNEL_GIT=shallow \
-            # 压缩输出镜像并生成校验文件
             COMPRESS_OUTPUTIMAGE=sha,gpg,xz
         fi
-    # 步骤5：上传构建成果到GitHub Release
     - name: Upload
-      # 只有提供了release-id和github-token时才执行此步骤
       if: inputs.release-id != '' && inputs.github-token != ''
-      # 使用第三方Action上传文件到GitHub Release
       uses: xresloader/upload-to-github-release@v1
-      # 设置环境变量
       env:
-          # 使用输入的GitHub令牌进行认证
           GITHUB_TOKEN: ${{ inputs.github-token }}
-      # 配置参数
       with:
-        # 指定要上传到的Release ID
         release_id: ${{ inputs.release-id }}
-        # 指定要上传的文件模式：所有.img.xz文件、校验文件和Linux内核deb包
         file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb"
-        # 不上传为草稿
         draft: false
-        # 覆盖已存在的文件
         overwrite: true
-    # 步骤6：如果构建失败，回滚Release
     - name: Rollback release
-      # 只有在构建失败且提供了release-id和github-token时才执行此步骤
       if: failure() && inputs.release-id != '' && inputs.github-token != ''
-      # 使用第三方Action回滚Release
       uses: author/action-rollback@stable
-      # 设置环境变量
       env:
-        # 使用输入的GitHub令牌进行认证
         GITHUB_TOKEN: ${{ inputs.github-token }}
-      # 配置参数
       with:
-        # 指定要回滚的Release ID
         release_id: ${{ inputs.release-id }}
