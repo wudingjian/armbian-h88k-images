@@ -43,7 +43,7 @@ jobs:
                           #  版本选择 详见 https://github.com/armbian/build/blob/main/patch/kernel
     steps:
       - name: Checkout  # 步骤1：检出代码
-        uses: actions/checkout@v2  # 使用官方 checkout action
+        uses: actions/checkout@v4  # 使用官方 checkout action
       - name: Upload Armbian image  # 步骤2：构建并上传 Armbian 镜像
         uses: wudingjian/armbian-h88k-images@master  # 使用当前仓库 构建 action
         if: matrix.DISTRO == 'armbian'  # 条件执行：只在构建 Armbian 时运行
