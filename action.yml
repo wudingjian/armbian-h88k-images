@@ -172,6 +172,34 @@ runs:
             KERNEL_GIT=shallow \
             COMPRESS_OUTPUTIMAGE=sha,gpg,xz
         fi
+
+    - name: 修改内核以支持 NPU
+      shell: bash
+      run: |
+        # 1. 下载压缩包
+        wget https://raw.githubusercontent.com/airockchip/rknn-llm/refs/heads/main/rknpu-driver/rknpu_driver_0.9.8_20241009.tar.bz2 -O /tmp/rknpu_driver.tar.bz2
+        
+        # 2. 解压该压缩包
+        tar -xjvf /tmp/rknpu_driver.tar.bz2 -C /tmp
+        # 解压到临时目录
+
+        # 3. 覆盖到当前内核代码目录
+        cp -r /tmp/rknpu_driver/* kernel/drivers/npu/
+        
+        # 4. 修改内核头文件 kernel/include/linux/mm.h
+        echo "static inline void vm_flags_set(struct vm_area_struct *vma, vm_flags_t flags) {
+            vma->vm_flags |= flags;
+        }
+        static inline void vm_flags_clear(struct vm_area_struct *vma, vm_flags_t flags) {
+            vma->vm_flags &= ~flags;
+        }" >> kernel/include/linux/mm.h
+        
+        # 5. 重新编译内核
+        make -C kernel/ ARCH=arm64 O=../output \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            linux-image-current-rockchip-rk3588_1.0.8_arm64.deb
+
+        
     - name: Upload
       if: inputs.release-id != '' && inputs.github-token != ''
       uses: xresloader/upload-to-github-release@v1
