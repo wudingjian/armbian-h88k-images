@@ -33,13 +33,13 @@ runs:
         sudo update-binfmts --enable qemu-aarch64
         sudo update-binfmts --enable qemu-riscv64
 
-        
     - name: Checkout
       uses: actions/checkout@v3
       with:
         repository: armbian/build
         ref: main
         path: build
+        
     - name: Set env
       shell: bash
       run: |
@@ -67,10 +67,10 @@ runs:
           echo "expert=yes" >> $GITHUB_ENV
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
         fi
+
     - name: Build
       shell: bash
       run: |
-
         # 开始编译
         cd ./build
         touch .ignore_changes
@@ -140,6 +140,55 @@ runs:
         
         ##  以上为针对rk3588-hinlink-h88k_V1_dts的修改
         
+        ## 下面是添加 rknpu 驱动的步骤
+        # 1. 下载 rknpu 驱动压缩包
+        wget https://raw.githubusercontent.com/airockchip/rknn-llm/refs/heads/main/rknpu-driver/rknpu_driver_0.9.8_20241009.tar.bz2 -O /tmp/rknpu_driver.tar.bz2
+        
+        # 2. 解压驱动包
+        mkdir -p /tmp/rknpu_driver
+        tar -xjf /tmp/rknpu_driver.tar.bz2 -C /tmp/rknpu_driver
+        
+        # 3. 覆盖当前内核代码目录中的 rknpu 驱动
+        KERNEL_DRIVER_DIR="kernel/drivers/rknpu"
+        mkdir -p $KERNEL_DRIVER_DIR
+        cp -r /tmp/rknpu_driver/drivers/rknpu/* $KERNEL_DRIVER_DIR/
+
+        # 4. 更新 Makefile
+        MAKEFILE_PATH="$KERNEL_DRIVER_DIR/Makefile"
+        DTS_ENTRY="obj-$(CONFIG_RKNPU) += rknpu.o"
+
+        if [ ! -f "$MAKEFILE_PATH" ]; then
+            echo "创建 $MAKEFILE_PATH"
+            echo "$DTS_ENTRY" > "$MAKEFILE_PATH"
+        elif ! grep -q "$DTS_ENTRY" "$MAKEFILE_PATH"; then
+            echo "添加 $DTS_ENTRY 到 $MAKEFILE_PATH"
+            echo "$DTS_ENTRY" >> "$MAKEFILE_PATH"
+        else
+            echo "$DTS_ENTRY 已经存在于 $MAKEFILE_PATH"
+        fi
+
+        # 5. 生成 Debian 包的目录结构
+        PACKAGE_NAME="rknpu-driver"
+        VERSION="0.9.8"
+        DEBIAN_DIR="./$PACKAGE_NAME/debian"
+        
+        mkdir -p $DEBIAN_DIR
+        mkdir -p "./$PACKAGE_NAME/usr/local/lib/$PACKAGE_NAME"
+        
+        # 6. 复制 rknpu 驱动文件到 Debian 包目录
+        cp -r $KERNEL_DRIVER_DIR/* "./$PACKAGE_NAME/usr/local/lib/$PACKAGE_NAME/"
+
+        # 7. 创建控制文件
+        echo "Package: $PACKAGE_NAME" > $DEBIAN_DIR/control
+        echo "Version: $VERSION" >> $DEBIAN_DIR/control
+        echo "Architecture: amd64" >> $DEBIAN_DIR/control
+        echo "Maintainer: Your Name <youremail@example.com>" >> $DEBIAN_DIR/control
+        echo "Description: RKNPU driver package" >> $DEBIAN_DIR/control
+        echo "Depends: linux-headers" >> $DEBIAN_DIR/control
+        
+        # 8. 制作 Debian 包
+        dpkg-deb --build $PACKAGE_NAME
+        
         sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
         git status
         docker pull ghcr.io/armbian/docker-armbian-build:armbian-ubuntu-jammy-latest
@@ -182,6 +231,7 @@ runs:
         find ./build/output/images -name "*.img.xz" -size +2048M -exec sh -c 'split -b 2048M "$1" "${1}.part"' _ {} \;
         # 确认拆分后的文件
         ls -l ./build/output/images/*.part*
+
     - name: Upload
       if: inputs.release-id != '' && inputs.github-token != ''
       uses: xresloader/upload-to-github-release@v1
@@ -189,9 +239,10 @@ runs:
           GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         release_id: ${{ inputs.release-id }}
-        file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb;./build/output/images/*.img.xz.part*"
+        file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb;./build/output/images/*.img.xz.part*;./$PACKAGE_NAME.deb"
         draft: false
         overwrite: true
+
     - name: Rollback release
       if: failure() && inputs.release-id != '' && inputs.github-token != ''
       uses: author/action-rollback@stable
