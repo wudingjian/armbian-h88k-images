@@ -230,7 +230,7 @@ runs:
       shell: bash
       run: |
         # 查找大于2 GiB的文件
-        large_files=$(find ./build/output/images -name "*.img.xz" -size +2048M)
+        large_files=$(find ./build/output/images -name "*.img.xz" -size +2000M)
     
         if [ -z "$large_files" ]; then
             echo "没有大于2 GiB的文件，跳过拆分。"
@@ -238,7 +238,7 @@ runs:
             # 拆分大于2 GiB的文件
             echo "开始拆分大于2 GiB的文件..."
             echo "$large_files" | while read -r file; do
-                split -b 2048M "$file" "${file}.part"
+                split -b 1900M "$file" "${file}.part"
                 # 拆分完成后删除原始大于2 GiB的文件
                 rm "$file"
             done
