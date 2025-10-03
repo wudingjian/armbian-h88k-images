@@ -67,35 +67,9 @@ runs:
           echo "expert=yes" >> $GITHUB_ENV
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
         fi
-        
-    - name: Print build directory structure
-      shell: bash
-      run: |
-        echo "Build directory structure:"
-        if command -v tree &> /dev/null; then
-          tree ./build
-        else
-          echo "tree command not found, displaying structure using find."
-          find ./build
-        fi
-        # Terminate the build
-        exit 1
-        
     - name: Build
       shell: bash
       run: |
-        # 1. 下载 rknpu 驱动压缩包
-        wget https://raw.githubusercontent.com/airockchip/rknn-llm/refs/heads/main/rknpu-driver/rknpu_driver_0.9.8_20241009.tar.bz2 -O /tmp/rknpu_driver.tar.bz2
-        
-        # 2. 解压压缩包
-        mkdir -p /tmp/rknpu_driver
-        tar -xjvf /tmp/rknpu_driver.tar.bz2 -C /tmp/rknpu_driver
-        
-        # 3. 创建目标目录
-        mkdir -p kernel/drivers/rknpu
-        
-        # 4. 复制文件到目标目录
-        cp -r /tmp/rknpu_driver/drivers/rknpu/* drivers/rknpu
 
         # 开始编译
         cd ./build
