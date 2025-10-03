@@ -70,6 +70,20 @@ runs:
     - name: Build
       shell: bash
       run: |
+        # 1. 下载 rknpu 驱动压缩包
+        wget https://raw.githubusercontent.com/airockchip/rknn-llm/refs/heads/main/rknpu-driver/rknpu_driver_0.9.8_20241009.tar.bz2 -O /tmp/rknpu_driver.tar.bz2
+        
+        # 2. 解压压缩包
+        mkdir -p /tmp/rknpu_driver
+        tar -xjvf /tmp/rknpu_driver.tar.bz2 -C /tmp/rknpu_driver
+        
+        # 3. 创建目标目录
+        mkdir -p kernel/drivers/rknpu
+        
+        # 4. 复制文件到目标目录
+        cp -r /tmp/rknpu_driver/drivers/rknpu/* kernel/drivers/rknpu
+
+        # 开始编译
         cd ./build
         touch .ignore_changes
         
@@ -172,6 +186,13 @@ runs:
             KERNEL_GIT=shallow \
             COMPRESS_OUTPUTIMAGE=sha,gpg,xz
         fi
+        
+    - name: Split large image files
+      shell: bash
+      run: |
+        # 拆分大于2 GiB的文件
+        find ./build/output/images -name "*.img.xz" -size +2048M -exec sh -c 'split -b 2048M "$1" "${1}.part"' _ {} \;
+
     - name: Upload
       if: inputs.release-id != '' && inputs.github-token != ''
       uses: xresloader/upload-to-github-release@v1
