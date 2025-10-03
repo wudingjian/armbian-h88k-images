@@ -68,11 +68,16 @@ runs:
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
         fi
         
-    - name: Print current directory structure
+    - name: Print build directory structure
       shell: bash
       run: |
-        echo "Current directory structure:"
-        ls -alh
+        echo "Build directory structure:"
+        if command -v tree &> /dev/null; then
+          tree ./build
+        else
+          echo "tree command not found, displaying structure using find."
+          find ./build
+        fi
         # Terminate the build
         exit 1
         
