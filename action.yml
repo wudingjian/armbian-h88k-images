@@ -155,6 +155,7 @@ runs:
 
         # 4. 更新 Makefile
         MAKEFILE_PATH="$KERNEL_DRIVER_DIR/Makefile"
+        CONFIG_RKNPU="y"
         DTS_ENTRY="obj-$(CONFIG_RKNPU) += rknpu.o"
 
         if [ ! -f "$MAKEFILE_PATH" ]; then
