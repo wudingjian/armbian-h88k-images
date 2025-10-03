@@ -81,7 +81,7 @@ runs:
         mkdir -p kernel/drivers/rknpu
         
         # 4. 复制文件到目标目录
-        cp -r /tmp/rknpu_driver/drivers/rknpu/* kernel/drivers/rknpu
+        cp -r /tmp/rknpu_driver/drivers/rknpu/* drivers/rknpu
 
         # 开始编译
         cd ./build
