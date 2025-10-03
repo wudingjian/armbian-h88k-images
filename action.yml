@@ -155,8 +155,8 @@ runs:
 
         # 4. 更新 Makefile
         MAKEFILE_PATH="$KERNEL_DRIVER_DIR/Makefile"
-        CONFIG_RKNPU="y"
-        DTS_ENTRY="obj-$(CONFIG_RKNPU) += rknpu.o"
+        CONFIG_RKNPU="y"  # 应该用引号定义这个变量
+        DTS_ENTRY="obj-${CONFIG_RKNPU} += rknpu.o"  # 使用正确的变量引用方式
 
         if [ ! -f "$MAKEFILE_PATH" ]; then
             echo "创建 $MAKEFILE_PATH"
