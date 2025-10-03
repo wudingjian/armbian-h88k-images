@@ -24,11 +24,14 @@ runs:
         remove-codeql: 'true'
         remove-docker-images: 'true'
 
-    - name: Install build dependencies
+    - name: 安装构建依赖项
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y binfmt-support qemu-user-static
+        if ! sudo apt-get install -y binfmt-support qemu-user-static; then
+          echo "无法安装依赖项。"
+          exit 1
+        fi
         sudo update-binfmts --enable qemu-arm
         sudo update-binfmts --enable qemu-aarch64
         sudo update-binfmts --enable qemu-riscv64
@@ -74,7 +77,7 @@ runs:
         # 开始编译
         cd ./build
         touch .ignore_changes
-        
+
         ##  以下为针对rk3588-hinlink-h88k_V1_dts的修改
         # 1.下载新的 V1_dts 文件
         wget https://github.com/wudingjian/armbian-h88k-images/raw/master/rk3588-hinlink-h88k.dts -O /tmp/rk3588-hinlink-h88k.dts
@@ -167,29 +170,24 @@ runs:
         else
             echo "$DTS_ENTRY 已经存在于 $MAKEFILE_PATH"
         fi
-
-        # 5. 生成 Debian 包的目录结构
-        PACKAGE_NAME="rknpu-driver"
-        VERSION="0.9.8"
-        DEBIAN_DIR="./$PACKAGE_NAME/debian"
-
-        # 创建 Debian 目录结构
+        # 生成 Debian 包的目录结构
+        PACKAGE_NAME="rknpu-driver"  # 确保在此处定义 PACKAGE_NAME
         mkdir -p "$PACKAGE_NAME/DEBIAN"
         mkdir -p "./$PACKAGE_NAME/usr/local/lib/$PACKAGE_NAME"
-        
-        # 6. 复制 rknpu 驱动文件到 Debian 包目录
+
+        # 复制 rknpu 驱动文件到 Debian 包目录
         cp -r $KERNEL_DRIVER_DIR/* "./$PACKAGE_NAME/usr/local/lib/$PACKAGE_NAME/"
 
-        # 7. 创建控制文件
+        # 创建控制文件
         echo "Package: $PACKAGE_NAME" > "$PACKAGE_NAME/DEBIAN/control"
         echo "Version: $VERSION" >> "$PACKAGE_NAME/DEBIAN/control"
         echo "Architecture: amd64" >> "$PACKAGE_NAME/DEBIAN/control"
         echo "Maintainer: Your Name <youremail@example.com>" >> "$PACKAGE_NAME/DEBIAN/control"
         echo "Description: RKNPU driver package" >> "$PACKAGE_NAME/DEBIAN/control"
         echo "Depends: linux-headers" >> "$PACKAGE_NAME/DEBIAN/control"
-        
-        # 8. 制作 Debian 包
-        dpkg-deb --build $PACKAGE_NAME
+
+        # 制作 Debian 包
+        dpkg-deb --build "$PACKAGE_NAME" || { echo "Failed to build Debian package"; exit 1; }
         
         sed -i "s|() {|() {\ndf -h \&\& du -sh \${SRC}/* \&\& du -sh \${SRC}/cache/* \&\& rm -rf \${SRC}/cache/sources/aptcache/* \${SRC}/cache/sources/linux-kernel-worktree/* \${SRC}/cache/sources/rootfs/*\n|g" extensions/image-output-abl.sh
         git status
@@ -230,9 +228,13 @@ runs:
       shell: bash
       run: |
         # 拆分大于2 GiB的文件
-        find ./build/output/images -name "*.img.xz" -size +2048M -exec sh -c 'split -b 2048M "$1" "${1}.part"' _ {} \;
-        # 确认拆分后的文件
-        ls -l ./build/output/images/*.part*
+        if find ./build/output/images -name "*.img.xz" -size +2048M -exec sh -c 'split -b 2048M "$1" "${1}.part"' _ {} \; ; then
+          echo "Files split successfully."
+        else
+          echo "No files to split."
+          exit 1
+        fi
+        ls -l ./build/output/images/*.part* || { echo "No split files found."; exit 1; }
 
     - name: Upload
       if: inputs.release-id != '' && inputs.github-token != ''
