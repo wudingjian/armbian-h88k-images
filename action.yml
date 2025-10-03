@@ -67,6 +67,15 @@ runs:
           echo "expert=yes" >> $GITHUB_ENV
           echo "desktop_appgroups_selected=\"browsers chat desktop_tools editors email internet multimedia office programming remote_desktop\"" >> $GITHUB_ENV
         fi
+        
+    - name: Print current directory structure
+      shell: bash
+      run: |
+        echo "Current directory structure:"
+        ls -alh
+        # Terminate the build
+        exit 1
+        
     - name: Build
       shell: bash
       run: |
@@ -192,7 +201,8 @@ runs:
       run: |
         # 拆分大于2 GiB的文件
         find ./build/output/images -name "*.img.xz" -size +2048M -exec sh -c 'split -b 2048M "$1" "${1}.part"' _ {} \;
-
+        # 确认拆分后的文件
+        ls -l ./build/output/images/*.part*
     - name: Upload
       if: inputs.release-id != '' && inputs.github-token != ''
       uses: xresloader/upload-to-github-release@v1
@@ -200,7 +210,7 @@ runs:
           GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         release_id: ${{ inputs.release-id }}
-        file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb"
+        file: "./build/output/images/*.img.xz;./build/output/images/*.img.xz.sha;./build/output/debs/linux-*.deb;./build/output/images/*.img.xz.part*"
         draft: false
         overwrite: true
     - name: Rollback release
